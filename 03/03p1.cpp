@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <string>
 
 int main(){
 	
@@ -9,69 +11,86 @@ int main(){
 	if (file.is_open())
 	{
 		
-		file.ignore( std::numeric_limits<std::streamsize>::max() );
-		int size = file.gcount();
-		char *contents = new char [size];
-		file.seekg (0, std::ifstream::beg);
-		file.read (contents, size);
-		file.close();
-	
-	
-		//get width
-		int width=0;
-		while(contents[width] != '\n')
-		{
-			width++;
-		}
+		//file.ignore( std::numeric_limits<std::streamsize>::max());
 
-		//get height
-		int i=0;
-		int height=1;
-		while(contents[i] != '\0')
+		std::vector<std::string> lines;
+		
+		for(std::string l; std::getline(file, l);)
 		{
-			if(contents[i] == '\n')
-			{height++;}
-			i++;
+			lines.emplace_back(l);
 		}
 		
-		//add padding for cleaner algorithm
+		file.close();
+		
+		//get width
+		int width= lines[1].size();
+		int height= lines.size();
+		
+		
+		//add border padding for cleaner algorithm
 		height+=2;
 		width+=2;
 
 		
-		char* arr = new char[height * width];
-		
-		//fill array with .
-		for (int i=0; i<height; i++){
-			for (int j=0; j<width; j++){
-				arr[i*width + j] = '.';
-			}
-		std::cout<<'\n';
-		}
+		std::vector<std::vector<char>> arr(height, std::vector<char> (width, '.'));
 
-		//fill array with chars
+		//fill array with chars, avoiding the border
 		
 		for (int i=1; i<height-1; i++){
 			for (int j=1; j<(width-1); j++){
-				arr[i*width + j] = contents[(i-1)*(width-1)+(j-1)]; //kinda messy, a more readable version would be to clean the contents array from \n before copying it in.
-				//std::cout<<arr[i*width + j];
+				arr[i][j] = lines[i-1][j-1];
 			}
-		//std::cout<<'\n';
 		}
 		//print array
-		for (int i=0; i<height; i++){
+		/*for (int i=0; i<height; i++){
 			for (int j=0; j<width; j++){
-				std::cout<<arr[i*width + j];
+				std::cout<<arr[i][j];
 			}
 		std::cout<<'\n';
-		}
-		
+		}*/
+
 		//Do the algorithm to check for valid numbers
+		
 
-
-	system ("pause");
+		
+		std::string n ="";
+		int start_width, end_width = 0;
+		int sum = 0;
+		bool is_valid = false;
+		
+		for (int i=1; i<height-1; i++){
+			for (int j=1; j<(width-1); j++){
+				
+				if(isdigit(arr[i][j])){
+					start_width = j-1;
+					while(isdigit(arr[i][j])){
+						n += arr[i][j];
+						j++;
+					}
+					end_width = j;
+					
+					//check if valid number
+					for(int i2 = i-1; i2<i+2; i2++){
+						for(int j2 = start_width; j2<=j;j2++){
+							if(arr[i2][j2]!='.' && !isdigit(arr[i2][j2])){
+								is_valid=true;
+							}
+						}
+					}
+					
+					//add to sum and reset
+					if(is_valid){sum += stoi(n);}
+					n="";
+					is_valid = false;
+					
+				}
+				
+			}
+		
+		}
+		std::cout<<sum <<'\n';
 	}
 	
-	system ("pause");
+	//std::cin.get();
 	return 0;
 }
